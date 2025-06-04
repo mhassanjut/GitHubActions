@@ -20,10 +20,10 @@ class ExampleUnitTest {
         assertEquals(3, 5 - 2) // ✅ Will pass
     }
 
-/*    @Test
+    @Test
     fun multiplication_fails_on_purpose() {
         assertEquals(10, 2 * 3) // ❌ Will fail (2*3 is 6)
-    }*/
+    }
 
     @Test
     fun string_equality() {
@@ -44,9 +44,9 @@ class ExampleUnitTest {
         assertFalse(numbers.contains(5)) // ✅ Will pass
     }
 
-//    @Test
-//    fun null_check_fails_on_purpose() {
-//        val value: String? = null
-//        assertNotNull(value) // ❌ Will fail
-//    }
+    @Test
+    fun null_check_fails_on_purpose() {
+        val value: String? = null
+        assertNotNull(value) // ❌ Will fail
+    }
 }

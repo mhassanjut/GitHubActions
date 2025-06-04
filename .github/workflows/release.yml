@@ -1,0 +1,65 @@
+name: Deploy to Google Play
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: 'gradle'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit test
+        run: ./gradlew  clean testDebug
+  distribute:
+    name: Distribute bundle to google play
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: 'gradle'
+      - name: Version Bump
+        uses: chkfung/android-version-actions@v1.2.3
+        with:
+          gradlePath: app/build.gradle.kts
+          versionCode: ${{ github.run_number }}
+
+      - name: Assemble Release
+        run: ./gradlew  bundleRelease
+
+      - name: Sign Release
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          alias: ${{ secrets.ALIAS }}
+          keyPassword: ${{ secrets.ALIAS_PASSWORD }}
+
+      - name: Setup Authorization with Google Playstore
+        run : echo '${{ secrets.PLAY_AUTH_JSON }}' > service_account.json
+
+      - name: Deploy bundle to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: service_account.json
+          packageName: com.yourcompany.yourapp
+          releaseFile: app/build/outputs/bundle/release/app-release.aab
+          track: internal  # or 'internal', 'beta', 'alpha'
+          status: completed  # or 'draft' or 'inProgress'
+          whatsNewDirectory: whatsnew/
